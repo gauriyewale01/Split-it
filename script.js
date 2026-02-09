@@ -1,3 +1,5 @@
+// FIXED GITHUB PAGES PAYMENT BUG
+
 let members = [];
 
 /* ---------- NAVIGATION ---------- */
@@ -6,9 +8,12 @@ function goToPage(n) {
   document.getElementById(`page${n}`).classList.add("active");
 
   if (n === 3) {
-    setTimeout(renderAmountCards, 0);
+    requestAnimationFrame(() => {
+      renderAmountCards();
+    });
   }
 }
+
 
 /* ---------- MEMBERS ---------- */
 function addMember() {
@@ -56,10 +61,6 @@ function renderAmountCards() {
 
       <button id="btn-${i}">Add Payment</button>
 
-      <input type="number"
-             placeholder="Your share (optional)"
-             class="share-input">
-
       <div id="list-${i}" class="payment-list"></div>
     `;
 
@@ -80,7 +81,10 @@ function addPayment(index) {
   const amtInput = document.getElementById(`amt-${index}`);
   const noteInput = document.getElementById(`note-${index}`);
 
-  if (!amtInput) return;
+  if (!amtInput || !noteInput) {
+    alert("Payment inputs not ready. Try again.");
+    return;
+  }
 
   const amount = Number(amtInput.value);
   const note = noteInput.value.trim() || "Payment";
@@ -94,6 +98,7 @@ function addPayment(index) {
 
   renderPaymentList(index);
 }
+
 
 function renderPaymentList(index) {
   const list = document.getElementById(`list-${index}`);
