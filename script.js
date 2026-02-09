@@ -1,173 +1,170 @@
 let members = [];
 
-function goToPage(n) {
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-  document.getElementById(`page${n}`).classList.add("active");
-}
-
-function addMember() {
-  let name = memberInput.value.trim();
-  if (!name || members.find(m => m.name === name)) return;
-
-  members.push({
-  name,
-  payments: [],
-  share: 0
-});
-
-  memberInput.value = "";
-  renderMembers();
-}
-
-function renderMembers() {
-  membersDiv = document.getElementById("members");
-  membersDiv.innerHTML = "";
-
-  members.forEach(m => {
-    membersDiv.innerHTML += `<div class="card">🎮 ${m.name}</div>`;
-  });
-}
-
-function goToAmounts() {
-  goToPage(3);
-}
-
-function renderAmountCards() {
-  const cards = document.getElementById("amountCards");
-  cards.innerHTML = "";
-
-  members.forEach((m, i) => {
-    cards.innerHTML += `
-      <div class="card">
-        <h3>${m.name}</h3>
-        <input type="number"
-       placeholder="Your share"
-       onchange="members[${i}].share = +this.value">
-
-       
-<input type="text" placeholder="For what?" id="note-${i}">
-<button onclick="addPayment(${i})">Add Payment</button>
-
-<div id="list-${i}" class="payment-list"></div>
-
-    `;
-  });
-}
-
-function addPayment(index) {
-  const amountInput = document.getElementById(`pay-${index}`);
-  const noteInput = document.getElementById(`note-${index}`);
-
-  if (!amountInput || !noteInput) {
-    console.error("Inputs not found for index", index);
-    return;
-  }
-
-  const amount = +amountInput.value;
-  const note = noteInput.value.trim() || "Payment";
-
-  if (!amount || amount <= 0) return;
-
-  members[index].payments.push({ amount, note });
-
-  amountInput.value = "";
-  noteInput.value = "";
-
-  renderPaymentList(index);
-}
-
-
-function renderPaymentList(index) {
-  const list = document.getElementById(`list-${index}`);
-  const payments = members[index].payments;
-
-  list.innerHTML = payments
-    .map(p => `₹${p.amount} <span>(${p.note})</span>`)
-    .join("<br>");
-}
-
-
-
-function calculate() {
-  goToPage(4);
-
-  // 1. Total money spent
-  let total = members.reduce(
-    (sum, m) => sum + m.payments.reduce((a, p) => a + p.amount, 0),
-    0
-  );
-
-  // 2. Handle unequal + auto shares
-  let totalCustomShare = members.reduce((s, m) => s + (m.share || 0), 0);
-  let autoMembers = members.filter(m => !m.share);
-
-  members.forEach(m => {
-    m.totalPaid = m.payments.reduce((a, p) => a + p.amount, 0);
-    m.finalShare = m.share
-      ? m.share
-      : (total - totalCustomShare) / autoMembers.length;
-  });
-
-  // 3. Build creditors & debtors
-  let creditors = [];
-  let debtors = [];
-
-  members.forEach(m => {
-    let diff = m.totalPaid - m.finalShare;
-
-    if (diff > 0) {
-      creditors.push({ name: m.name, amt: diff });
-    } else if (diff < 0) {
-      debtors.push({ name: m.name, amt: -diff });
-    }
-  });
-
-  // 4. Settlement logic
-  let res = `
-    <p><b>Total:</b> ₹${total}</p>
-    <p><b>Each share:</b></p>
-    <hr>
-  `;
-
-  debtors.forEach(d => {
-    creditors.forEach(c => {
-      if (d.amt > 0 && c.amt > 0) {
-        let pay = Math.min(d.amt, c.amt);
-        d.amt -= pay;
-        c.amt -= pay;
-
-        res += `<p>${d.name} pays ₹${pay.toFixed(0)} to ${c.name}</p>`;
-      }
-    });
-  });
-
-  document.getElementById("result").innerHTML = res;
-}
-
-
+/* ---------- NAVIGATION ---------- */
 function goToPage(n) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.getElementById(`page${n}`).classList.add("active");
 
   if (n === 3) {
-    renderAmountCards(); // render ONCE when page 3 opens
+    setTimeout(renderAmountCards, 0);
   }
 }
 
+/* ---------- MEMBERS ---------- */
+function addMember() {
+  const input = document.getElementById("memberInput");
+  const name = input.value.trim();
+  if (!name) return;
 
+  members.push({
+    name,
+    payments: [],
+    share: 0,
+    totalPaid: 0
+  });
 
+  input.value = "";
+  renderMembers();
+}
+
+function renderMembers() {
+  const div = document.getElementById("members");
+  div.innerHTML = "";
+
+  members.forEach(m => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.textContent = m.name;
+    div.appendChild(card);
+  });
+}
+
+/* ---------- PAYMENTS ---------- */
+function renderAmountCards() {
+  const container = document.getElementById("amountCards");
+  container.innerHTML = "";
+
+  members.forEach((m, i) => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <h3>${m.name}</h3>
+
+      <input type="number" placeholder="Amount" id="amt-${i}">
+      <input type="text" placeholder="For what?" id="note-${i}">
+
+      <button id="btn-${i}">Add Payment</button>
+
+      <input type="number"
+             placeholder="Your share (optional)"
+             class="share-input">
+
+      <div id="list-${i}" class="payment-list"></div>
+    `;
+
+    container.appendChild(card);
+
+    // SAFE event binding
+    document.getElementById(`btn-${i}`)
+      .addEventListener("click", () => addPayment(i));
+
+    card.querySelector(".share-input")
+      .addEventListener("input", e => {
+        members[i].share = +e.target.value || 0;
+      });
+  });
+}
+
+function addPayment(index) {
+  const amtInput = document.getElementById(`amt-${index}`);
+  const noteInput = document.getElementById(`note-${index}`);
+
+  if (!amtInput) return;
+
+  const amount = Number(amtInput.value);
+  const note = noteInput.value.trim() || "Payment";
+
+  if (amount <= 0) return;
+
+  members[index].payments.push({ amount, note });
+
+  amtInput.value = "";
+  noteInput.value = "";
+
+  renderPaymentList(index);
+}
+
+function renderPaymentList(index) {
+  const list = document.getElementById(`list-${index}`);
+  list.innerHTML = "";
+
+  members[index].payments.forEach(p => {
+    const div = document.createElement("div");
+    div.textContent = `₹${p.amount} — ${p.note}`;
+    list.appendChild(div);
+  });
+}
+
+/* ---------- CALCULATION ---------- */
+function calculate() {
+  goToPage(4);
+
+  const total = members.reduce(
+    (sum, m) => sum + m.payments.reduce((s, p) => s + p.amount, 0),
+    0
+  );
+
+  const customTotal = members.reduce((s, m) => s + (m.share || 0), 0);
+  const autoMembers = members.filter(m => !m.share);
+
+  members.forEach(m => {
+    m.totalPaid = m.payments.reduce((s, p) => s + p.amount, 0);
+    m.finalShare = m.share
+      ? m.share
+      : (total - customTotal) / autoMembers.length;
+  });
+
+  let creditors = [];
+  let debtors = [];
+
+  members.forEach(m => {
+    const diff = m.totalPaid - m.finalShare;
+    if (diff > 0) creditors.push({ name: m.name, amt: diff });
+    if (diff < 0) debtors.push({ name: m.name, amt: -diff });
+  });
+
+  let output = `<p><b>Total:</b> ₹${total}</p><hr>`;
+
+  debtors.forEach(d => {
+    creditors.forEach(c => {
+      if (d.amt > 0 && c.amt > 0) {
+        const pay = Math.min(d.amt, c.amt);
+        d.amt -= pay;
+        c.amt -= pay;
+        output += `<p>${d.name} pays ₹${pay.toFixed(0)} to ${c.name}</p>`;
+      }
+    });
+  });
+
+  document.getElementById("result").innerHTML = output;
+}
+
+/* ---------- EXPORT ---------- */
 function copyResult() {
-  const text = document.getElementById("result").innerText;
-  navigator.clipboard.writeText(text);
-  alert("Copied to clipboard!");
+  navigator.clipboard.writeText(
+    document.getElementById("result").innerText
+  );
+  alert("Copied!");
 }
 
 function downloadResult() {
-  const text = document.getElementById("result").innerText;
-  const blob = new Blob([text], { type: "text/plain" });
-  const link = document.createElement("a");
-
-  link.href = URL.createObjectURL(blob);
-  link.download = "settlement.txt";
-  link.click();
+  const blob = new Blob(
+    [document.getElementById("result").innerText],
+    { type: "text/plain" }
+  );
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "settlement.txt";
+  a.click();
 }
