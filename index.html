@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Split It</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- PAGE 1 : CREATE ROOM -->
+<section class="page active" id="page1">
+  <h1> SPLIT IT</h1>
+  <button onclick="goToPage(2)">Create Room</button>
+</section>
+
+<!-- PAGE 2 : ADD MEMBERS -->
+<section class="page" id="page2">
+  <h2>Add Players 🎮</h2>
+  <input id="memberInput" placeholder="Enter name">
+  <button onclick="addMember()">Add</button>
+
+  <div id="members" class="grid"></div>
+
+  <button onclick="goToPage(3)">Next</button>
+</section>
+
+<!-- PAGE 3 : ADD AMOUNTS -->
+<section class="page" id="page3">
+  <h2>Who Paid What 💳</h2>
+  <div id="amountCards" class="grid"></div>
+
+  <button onclick="calculate()">Calculate</button>
+</section>
+
+<!-- PAGE 4 : RESULT -->
+<section class="page" id="page4">
+  <h2>Settlement 🧾</h2>
+  <div id="result"></div>
+  <button onclick="copyResult()">Copy Result</button>
+<button onclick="downloadResult()">Download</button>
+
+  <button onclick="location.reload()">New Room</button>
+</section>
+
+<script src="script.js"></script>
+</body>
+</html>

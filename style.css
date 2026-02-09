@@ -1,0 +1,61 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: radial-gradient(circle at top, #1f1c2c, #000);
+  color: white;
+}
+
+.page {
+  display: none;
+  min-height: 100vh;
+  padding: 40px;
+  text-align: center;
+}
+
+.page.active {
+  display: block;
+}
+
+h1 {
+  font-size: 3rem;
+  letter-spacing: 3px;
+}
+
+button {
+  margin-top: 20px;
+  padding: 14px 30px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 30px;
+  background: linear-gradient(135deg, #ff416c, #ff4b2b);
+  color: white;
+  cursor: pointer;
+}
+
+input {
+  padding: 12px;
+  width: 220px;
+  border-radius: 20px;
+  border: none;
+  margin-top: 10px;
+}
+
+.grid {
+  margin-top: 25px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.card {
+  background: rgba(255,255,255,0.12);
+  padding: 15px;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.payment-list {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
