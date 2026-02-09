@@ -70,10 +70,7 @@ function renderAmountCards() {
     document.getElementById(`btn-${i}`)
       .addEventListener("click", () => addPayment(i));
 
-    card.querySelector(".share-input")
-      .addEventListener("input", e => {
-        members[i].share = +e.target.value || 0;
-      });
+    
   });
 }
 
